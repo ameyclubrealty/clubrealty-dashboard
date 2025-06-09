@@ -583,10 +583,10 @@ export default function PropertyViewPage() {
                   <dd className="font-medium">
                     {property.createdAt
                       ? new Date(property.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
                       : "Unknown"}
                   </dd>
                 </div>
@@ -595,17 +595,22 @@ export default function PropertyViewPage() {
                   <dd className="font-medium">
                     {property.updatedAt
                       ? new Date(property.updatedAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
                       : "Unknown"}
                   </dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-muted-foreground">Published By</dt>
+                  <dd className="font-medium">{property.publishedBy || "Not specified"}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-muted-foreground">Published</dt>
                   <dd className="font-medium">{property.published ? "Yes" : "No"}</dd>
                 </div>
+
               </dl>
             </CardContent>
             <CardFooter className="flex justify-between">

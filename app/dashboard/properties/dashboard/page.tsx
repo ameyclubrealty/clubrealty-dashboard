@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Plus, RefreshCw, Filter, MoreHorizontal } from "lucide-react"
@@ -29,6 +31,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 // Direct Firebase imports
 import { db } from "@/lib/firebase/config"
 import { collection, getDocs, Timestamp, doc, updateDoc } from "firebase/firestore"
+import { DateRange } from "react-day-picker"
+import { Popover, PopoverTrigger } from "@radix-ui/react-popover"
+import { PopoverContent } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
 
 type Property = {
   id: string
@@ -151,7 +157,26 @@ export default function PropertiesDashboardPage() {
     bedrooms?: string
     bathrooms?: string
     [key: string]: any
+    publishedBy: string
+    startDate?: string;  // in yyyy-mm-dd format
+    endDate?: string;
   }
+
+  // Date range state at component level
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: activeFilters?.startDate ? new Date(activeFilters.startDate) : undefined,
+    to: activeFilters?.endDate ? new Date(activeFilters.endDate) : undefined,
+  });
+
+  // When date range is selected, update filter
+  useEffect(() => {
+    handleFilterChange({
+      ...activeFilters,
+      startDate: dateRange?.from?.toISOString().split("T")[0] || "",
+      endDate: dateRange?.to?.toISOString().split("T")[0] || "",
+    } as PropertyFilters)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateRange]);
 
   const applyFiltersAndSearch = (
     properties: Property[],
@@ -167,8 +192,27 @@ export default function PropertiesDashboardPage() {
           (property.title || "").toLowerCase().includes(query) ||
           (property.additionalInfo || "").toLowerCase().includes(query) ||
           (property.address || "").toLowerCase().includes(query) ||
-          (property.city || "").toLowerCase().includes(query),
+          (property.city || "").toLowerCase().includes(query) ||
+          (property.publishedBy || "").toLowerCase().includes(query) // 🔽 Add this line
       )
+    }
+
+    // Filter by date range (assuming property.createdAt is in ISO format)
+    if (filters && (filters.startDate || filters.endDate)) {
+      result = result.filter((property) => {
+        const propertyDate = new Date(property.createdAt || property.date).getTime();
+
+        const start = filters.startDate ? new Date(filters.startDate).getTime() : null;
+        const end = filters.endDate ? new Date(filters.endDate).getTime() : null;
+
+        return (!start || propertyDate >= start) && (!end || propertyDate <= end);
+      });
+    }
+
+    if (filters && filters.exactDate) {
+      result = result.filter((property) => {
+        return property.createdAt?.slice(0, 10) === filters.exactDate;
+      });
     }
 
     // Apply filters if they exist
@@ -198,6 +242,14 @@ export default function PropertiesDashboardPage() {
           const price = Number(property.price || 0)
           return price >= filters.minPrice! && price <= filters.maxPrice!
         })
+      }
+
+      // 🔽 Add this block
+      if (filters.publishedBy && filters.publishedBy.trim() !== "") {
+        result = result.filter(
+          (property) =>
+            (property.publishedBy || "").toLowerCase().includes(filters.publishedBy.toLowerCase())
+        )
       }
 
       // Filter by bedrooms
@@ -334,23 +386,23 @@ export default function PropertiesDashboardPage() {
   }
 
   const formatIndianCompactCurrency = (price) => {
-  const numericPrice =
-    typeof price === "string" ? parseFloat(price) : price;
+    const numericPrice =
+      typeof price === "string" ? parseFloat(price) : price;
 
-  if (numericPrice === undefined || numericPrice === null || isNaN(numericPrice)) {
-    return "₹ --";
-  }
+    if (numericPrice === undefined || numericPrice === null || isNaN(numericPrice)) {
+      return "₹ --";
+    }
 
-  if (numericPrice >= 1e7) {
-    return `₹ ${(numericPrice / 1e7).toFixed(2).replace(/\.00$/, "")}Cr`;
-  }
+    if (numericPrice >= 1e7) {
+      return `₹ ${(numericPrice / 1e7).toFixed(2).replace(/\.00$/, "")}Cr`;
+    }
 
-  if (numericPrice >= 1e5) {
-    return `₹ ${(numericPrice / 1e5).toFixed(2).replace(/\.00$/, "")}L`;
-  }
+    if (numericPrice >= 1e5) {
+      return `₹ ${(numericPrice / 1e5).toFixed(2).replace(/\.00$/, "")}L`;
+    }
 
-  return `₹ ${numericPrice.toLocaleString("en-IN")}`;
-};
+    return `₹ ${numericPrice.toLocaleString("en-IN")}`;
+  };
 
   return (
     <div className="flex-1 space-y-6 p-6 md:p-8">
@@ -376,14 +428,50 @@ export default function PropertiesDashboardPage() {
       {properties.length > 0 && <PropertyStats properties={properties} />}
 
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:space-y-0 md:space-x-4">
-        <div className="relative flex-1">
-          <Input
-            type="search"
-            placeholder="Search properties..."
-            value={searchQuery}
-            onChange={handleSearch}
-            className="w-full"
-          />
+        <div className="flex flex-row items-end gap-4 w-full">
+          {/* Search Input */}
+          <div className="flex-1">
+            <Input
+              type="search"
+              placeholder="Search properties..."
+              value={searchQuery}
+              onChange={handleSearch}
+              className="w-full"
+            />
+          </div>
+
+          {/* Date Range Picker */}
+          <div className="flex flex-col">
+            <Label>Date Range</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-[250px] justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      `${format(dateRange.from, "dd MMM yyyy")} - ${format(dateRange.to, "dd MMM yyyy")}`
+                    ) : (
+                      format(dateRange.from, "dd MMM yyyy")
+                    )
+                  ) : (
+                    <span>Select date range</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         {/* Replace Sheet with Dialog */}
@@ -467,7 +555,7 @@ export default function PropertiesDashboardPage() {
                           </p>
                           <div className="flex items-center text-sm text-muted-foreground">
                             <span className="mx-1">•</span>
-                            <span>{property.unitTypes.map(unit => unit.type)|| "N/A"}</span>
+                            <span>{property.unitTypes.map(unit => unit.type) || "N/A"}</span>
                           </div>
                         </div>
                       </div>

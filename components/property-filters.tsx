@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
+import { Input } from "@/components/ui/input"
 
 export function PropertyFilters({ onFilterChange }) {
   const [filters, setFilters] = useState({
@@ -16,6 +17,7 @@ export function PropertyFilters({ onFilterChange }) {
     bedrooms: "",
     bathrooms: "",
     listingIntent: "",
+    publishedBy: ""
   })
 
   const handleFilterChange = (key, value) => {
@@ -45,6 +47,7 @@ export function PropertyFilters({ onFilterChange }) {
       bedrooms: "",
       bathrooms: "",
       listingIntent: "",
+      publishedBy: ""
     }
 
     setFilters(defaultFilters)
@@ -98,6 +101,16 @@ export function PropertyFilters({ onFilterChange }) {
             <SelectItem value="land">Land</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="publishedBy">Published By</Label>
+        <Input
+          id="publishedBy"
+          placeholder="e.g. John Doe"
+          value={filters.publishedBy}
+          onChange={(e) => handleFilterChange("publishedBy", e.target.value)}
+        />
       </div>
 
       <div className="space-y-2">

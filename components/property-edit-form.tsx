@@ -89,6 +89,7 @@ const propertyFormSchema = z.object({
   propertyType: z.string(),
   startingPrice: z.coerce.number().min(0, "Price must be 0 or more"),
   published: z.boolean().default(true),
+  publishedBy: z.string(),
   projectId: z.string().optional(),
   parkingAvailable: z.boolean().default(false),
   heading: z.string().min(2, "Heading must be at least 2 characters").optional(),
@@ -317,6 +318,7 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
       virtualTourLink: "",
       keyFeatures: [],
       assignedSaleMemberPhoto: "",
+      publishedBy: ""
     },
   })
 
@@ -340,6 +342,7 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
             propertyType: property.propertyType || "residential",
             startingPrice: property.startingPrice || 0,
             published: property.published !== false, // Default to true if not specified
+            publishedBy: property.publishedby || "",
             projectId: property.projectId || "",
             parkingAvailable: property.parkingAvailable || false,
             heading: property.heading || "",
@@ -646,6 +649,7 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
         virtualTourLink: data.virtualTourLink || "",
         propertySubtype: data.propertySubtype, // Ensure propertySubtype is explicitly included
         assignedSaleMemberPhoto: data.assignedSaleMemberPhoto || "", // Ensure photo field is included
+        publishedBy: data.publishedBy || ""
       }
 
       console.log("Submitting property update:", propertyId, propertyData)
@@ -919,18 +923,16 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
                       </div>
                     </div>
                   </div>
-
                   <div>
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Enter property description"
-                      className="min-h-32"
-                      {...form.register("description")}
+                    <Label htmlFor="publishedBy">Published By</Label>
+                    <Input
+                      id="publishedBy"
+                      placeholder=""
+                      {...form.register("publishedBy")}
                     />
-                    {form.formState.errors.description && (
+                    {form.formState.errors.publishedBy && (
                       <p className="text-sm font-medium text-destructive mt-1">
-                        {form.formState.errors.description.message}
+                        {form.formState.errors.publishedBy.message}
                       </p>
                     )}
                   </div>

@@ -177,6 +177,11 @@ const formatPrice = (price) => {
             {formatPrice(property.startingPrice)}
           </Badge>
 
+            <Badge className="absolute bottom-2 left-2 bg-white text-black px-3 py-1 text-xs font-medium shadow-sm">
+            {/* {formattedPrice} */}
+            {property.publishedBy}
+          </Badge>
+
           {/* Actions dropdown at bottom right */}
           <div className="absolute bottom-2 right-2">
             <DropdownMenu>

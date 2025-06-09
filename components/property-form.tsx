@@ -32,7 +32,7 @@ const propertyFormSchema = z.object({
   companyName: z.string().optional(),
   assignedSaleMemberPhone: z.string().optional(),
   assignedSaleMemberPhoto: z.string().optional(),
-
+  publishedBy: z.string(),
   // Property Type
   propertyType: z.string(),
   propertySubtype: z.string(),
@@ -300,6 +300,7 @@ export function PropertyForm() {
       detailsPdf: "",
       virtualTourLink: "",
       published: false,
+      publishedBy: ""
     },
   })
 
@@ -550,6 +551,7 @@ export function PropertyForm() {
         status: data.possessStatus, // Map possessStatus back to status for backward compatibility
         virtualTourLink: data.virtualTourLink || "",
         assignedSaleMemberPhoto: data.assignedSaleMemberPhoto || "", // Ensure photo field is included
+        publishedBy: data.publishedBy
       }
 
       console.log("Prepared property data for submission:", propertyData)
@@ -875,7 +877,19 @@ export function PropertyForm() {
                       </div>
                     </div>
                   </div>
-
+                  <div>
+                    <Label htmlFor="publishedBy">Published By</Label>
+                    <Input
+                      id="publishedBy"
+                      placeholder="e.g. John Doe"
+                      {...form.register("publishedBy")}
+                    />
+                    {form.formState.errors.publishedBy && (
+                      <p className="text-sm font-medium text-destructive mt-1">
+                        {form.formState.errors.publishedBy.message}
+                      </p>
+                    )}
+                  </div>
                   <div>
                     <Label htmlFor="description">Description</Label>
                     <Textarea
@@ -1251,104 +1265,104 @@ export function PropertyForm() {
                 <CardContent className="pt-6">
                   <div className="grid gap-6">
                     {/* all your inputs: floors, towers, wings, etc. */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="floors">Floors</Label>
-                      <Input id="floors" type="number" min="0" {...form.register("floors")} />
-                      {form.formState.errors.floors && (
-                        <p className="text-sm font-medium text-destructive mt-1">
-                          {form.formState.errors.floors.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="towers">Towers</Label>
-                      <Input id="towers" type="number" min="0" {...form.register("towers")} />
-                      {form.formState.errors.towers && (
-                        <p className="text-sm font-medium text-destructive mt-1">
-                          {form.formState.errors.towers.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <Label htmlFor="wings">Wings</Label>
-                      <Input id="wings" type="number" min="0" {...form.register("wings")} />
-                      {form.formState.errors.wings && (
-                        <p className="text-sm font-medium text-destructive mt-1">
-                          {form.formState.errors.wings.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="basements">Basements</Label>
-                      <Input id="basements" type="number" min="0" {...form.register("basements")} />
-                      {form.formState.errors.basements && (
-                        <p className="text-sm font-medium text-destructive mt-1">
-                          {form.formState.errors.basements.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <Label className="text-base">Parking Available</Label>
-                        <p className="text-sm text-muted-foreground">Does this property have parking facilities?</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="floors">Floors</Label>
+                        <Input id="floors" type="number" min="0" {...form.register("floors")} />
+                        {form.formState.errors.floors && (
+                          <p className="text-sm font-medium text-destructive mt-1">
+                            {form.formState.errors.floors.message}
+                          </p>
+                        )}
                       </div>
-                      <Switch
-                        checked={form.watch("parkingAvailable")}
-                        onCheckedChange={(checked) => form.setValue("parkingAvailable", checked)}
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="builderDate">Builder Date</Label>
-                      <Input id="builderDate" placeholder="e.g. TBD" {...form.register("builderDate")} />
-                      {form.formState.errors.builderDate && (
-                        <p className="text-sm font-medium text-destructive mt-1">
-                          {form.formState.errors.builderDate.message}
-                        </p>
-                      )}
-                    </div>
+                      <div>
+                        <Label htmlFor="towers">Towers</Label>
+                        <Input id="towers" type="number" min="0" {...form.register("towers")} />
+                        {form.formState.errors.towers && (
+                          <p className="text-sm font-medium text-destructive mt-1">
+                            {form.formState.errors.towers.message}
+                          </p>
+                        )}
+                      </div>
 
-                    <div>
-                      <Label htmlFor="possessionDate">Possession Date</Label>
-                      <Input id="possessionDate" placeholder="e.g. TBD" {...form.register("possessionDate")} />
-                      {form.formState.errors.possessionDate && (
-                        <p className="text-sm font-medium text-destructive mt-1">
-                          {form.formState.errors.possessionDate.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="reraNumber">RERA Number</Label>
-                      <Input id="reraNumber" placeholder="e.g. P51800055801" {...form.register("reraNumber")} />
-                      {form.formState.errors.reraNumber && (
-                        <p className="text-sm font-medium text-destructive mt-1">
-                          {form.formState.errors.reraNumber.message}
-                        </p>
-                      )}
+                      <div>
+                        <Label htmlFor="wings">Wings</Label>
+                        <Input id="wings" type="number" min="0" {...form.register("wings")} />
+                        {form.formState.errors.wings && (
+                          <p className="text-sm font-medium text-destructive mt-1">
+                            {form.formState.errors.wings.message}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
-                    <div>
-                      <Label htmlFor="reraDate">RERA Date</Label>
-                      <Input id="reraDate" placeholder="e.g. 15/03/2023" {...form.register("reraDate")} />
-                      {form.formState.errors.reraDate && (
-                        <p className="text-sm font-medium text-destructive mt-1">
-                          {form.formState.errors.reraDate.message}
-                        </p>
-                      )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="basements">Basements</Label>
+                        <Input id="basements" type="number" min="0" {...form.register("basements")} />
+                        {form.formState.errors.basements && (
+                          <p className="text-sm font-medium text-destructive mt-1">
+                            {form.formState.errors.basements.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <Label className="text-base">Parking Available</Label>
+                          <p className="text-sm text-muted-foreground">Does this property have parking facilities?</p>
+                        </div>
+                        <Switch
+                          checked={form.watch("parkingAvailable")}
+                          onCheckedChange={(checked) => form.setValue("parkingAvailable", checked)}
+                        />
+                      </div>
                     </div>
-                  </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="builderDate">Builder Date</Label>
+                        <Input id="builderDate" placeholder="e.g. TBD" {...form.register("builderDate")} />
+                        {form.formState.errors.builderDate && (
+                          <p className="text-sm font-medium text-destructive mt-1">
+                            {form.formState.errors.builderDate.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="possessionDate">Possession Date</Label>
+                        <Input id="possessionDate" placeholder="e.g. TBD" {...form.register("possessionDate")} />
+                        {form.formState.errors.possessionDate && (
+                          <p className="text-sm font-medium text-destructive mt-1">
+                            {form.formState.errors.possessionDate.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="reraNumber">RERA Number</Label>
+                        <Input id="reraNumber" placeholder="e.g. P51800055801" {...form.register("reraNumber")} />
+                        {form.formState.errors.reraNumber && (
+                          <p className="text-sm font-medium text-destructive mt-1">
+                            {form.formState.errors.reraNumber.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="reraDate">RERA Date</Label>
+                        <Input id="reraDate" placeholder="e.g. 15/03/2023" {...form.register("reraDate")} />
+                        {form.formState.errors.reraDate && (
+                          <p className="text-sm font-medium text-destructive mt-1">
+                            {form.formState.errors.reraDate.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
                   </div>
                 </CardContent>
@@ -1628,14 +1642,14 @@ export function PropertyForm() {
                     )}
                   </div>
                   <div>
-                      <Label htmlFor="floors">Floor</Label>
-                      <Input id="floors" type="number" min="0" {...form.register("floors")} />
-                      {form.formState.errors.floors && (
-                        <p className="text-sm font-medium text-destructive mt-1">
-                          {form.formState.errors.floors.message}
-                        </p>
-                      )}
-                    </div>
+                    <Label htmlFor="floors">Floor</Label>
+                    <Input id="floors" type="number" min="0" {...form.register("floors")} />
+                    {form.formState.errors.floors && (
+                      <p className="text-sm font-medium text-destructive mt-1">
+                        {form.formState.errors.floors.message}
+                      </p>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="city">City</Label>
