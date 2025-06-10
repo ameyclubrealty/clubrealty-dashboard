@@ -65,6 +65,7 @@
   },
   "devDependencies": {
     "@types/node": "^22",
+    "@types/number-to-words": "^1.2.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8",

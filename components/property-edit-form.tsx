@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { z } from "zod"
+import { toWords } from "number-to-words";
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
@@ -321,6 +322,29 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
       publishedBy: ""
     },
   })
+
+  // Move these hooks to the top level of the component
+  const startingPrice = form.watch("startingPrice");
+  const [priceInWords, setPriceInWords] = useState("");
+
+  useEffect(() => {
+    if (startingPrice && !isNaN(startingPrice)) {
+      try {
+        const cleanValue = startingPrice;
+        if (!isNaN(cleanValue)) {
+          setPriceInWords(
+            (toWords(cleanValue).replace(/\b\w/g, (c: string) => c.toUpperCase()) + " Rupees")
+          );
+        } else {
+          setPriceInWords("");
+        }
+      } catch {
+        setPriceInWords("");
+      }
+    } else {
+      setPriceInWords("");
+    }
+  }, [startingPrice]);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -751,6 +775,8 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
     )
   }
 
+
+
   // Add this error alert at the beginning of the form, right after the <form> tag
   // Add this right after the opening <form> tag in the return statement
   return (
@@ -950,6 +976,11 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
                       {form.formState.errors.startingPrice && (
                         <p className="text-sm font-medium text-destructive mt-1">
                           {form.formState.errors.startingPrice.message}
+                        </p>
+                      )}
+                      {priceInWords && (
+                        <p className="text-sm text-muted-foreground mt-1 italic">
+                          {priceInWords}
                         </p>
                       )}
                     </div>
@@ -1315,16 +1346,7 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
                     </div>
                   </div>
 
-                  <div className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Parking Available</Label>
-                      <p className="text-sm text-muted-foreground">Does this property have parking facilities?</p>
-                    </div>
-                    <Switch
-                      checked={form.watch("parkingAvailable")}
-                      onCheckedChange={(checked) => form.setValue("parkingAvailable", checked)}
-                    />
-                  </div>
+
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -1448,6 +1470,17 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <Label className="text-base">Parking Available</Label>
+                      <p className="text-sm text-muted-foreground">Does this property have parking facilities?</p>
+                    </div>
+                    <Switch
+                      checked={form.watch("parkingAvailable")}
+                      onCheckedChange={(checked) => form.setValue("parkingAvailable", checked)}
+                    />
                   </div>
 
                   <div className="space-y-4">
