@@ -28,7 +28,7 @@ const convertTimestamps = (data) => {
 
   return result
 }
-
+  
 // Helper function to clean up data before saving to Firestore
 const cleanPropertyData = (data) => {
   // Create a deep copy to avoid modifying the original

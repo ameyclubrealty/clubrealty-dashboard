@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
+import { getProperties } from "../lib/firebase/properties" // Import your Firebase functions
 
 export function PropertyFilters({ onFilterChange }) {
   const [filters, setFilters] = useState({
@@ -20,6 +21,26 @@ export function PropertyFilters({ onFilterChange }) {
     publishedBy: ""
   })
 
+  const [publishedByOptions, setPublishedByOptions] = useState([])
+  const [customPublishedBy, setCustomPublishedBy] = useState("")
+
+  useEffect(() => {
+    const fetchPublishedByOptions = async () => {
+      try {
+        const { success, properties } = await getProperties()
+        if (success) {
+          // Extract unique publishedBy values from properties
+          const uniquePublishedBy = [...new Set(properties.map(property => property.publishedBy).filter(Boolean))]
+          setPublishedByOptions(uniquePublishedBy)
+        }
+      } catch (error) {
+        console.error("Error fetching publishedBy options:", error)
+      }
+    }
+
+    fetchPublishedByOptions()
+  }, [])
+
   const handleFilterChange = (key, value) => {
     const updatedFilters = { ...filters, [key]: value }
     setFilters(updatedFilters)
@@ -27,6 +48,15 @@ export function PropertyFilters({ onFilterChange }) {
     // Log the filter change
     console.log(`Filter changed: ${key} = ${value}`)
     console.log("Current filters:", updatedFilters)
+  }
+
+  const handlePublishedByChange = (value) => {
+    if (value === "custom") {
+      setCustomPublishedBy("")
+      handleFilterChange("publishedBy", "")
+    } else {
+      handleFilterChange("publishedBy", value)
+    }
   }
 
   const applyFilters = () => {
@@ -51,6 +81,7 @@ export function PropertyFilters({ onFilterChange }) {
     }
 
     setFilters(defaultFilters)
+    setCustomPublishedBy("")
 
     // Log the reset
     console.log("Filters reset to defaults")
@@ -104,14 +135,33 @@ export function PropertyFilters({ onFilterChange }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="publishedBy">Published By</Label>
-        <Input
-          id="publishedBy"
-          placeholder="e.g. John Doe"
-          value={filters.publishedBy}
-          onChange={(e) => handleFilterChange("publishedBy", e.target.value)}
-        />
+        <Label htmlFor="publishedBy" className="block">Published By</Label>
+        <div className="flex items-center space-x-2">
+          <Select value={filters.publishedBy || "custom"} onValueChange={handlePublishedByChange}>
+            <SelectTrigger id="publishedBy">
+              <SelectValue placeholder="Select a publisher" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="custom">Select Options</SelectItem>
+              {publishedByOptions.map(option => (
+                <SelectItem key={option} value={option}>{option}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {/* {filters.publishedBy === "" && (
+            <Input
+              id="customPublishedBy"
+              placeholder="e.g. John Doe"
+              value={customPublishedBy}
+              onChange={(e) => {
+                setCustomPublishedBy(e.target.value)
+                handleFilterChange("publishedBy", e.target.value)
+              }}
+            />
+          )} */}
+        </div>
       </div>
+
 
       <div className="space-y-2">
         <Label htmlFor="listingIntent">Listing Intent</Label>
@@ -196,5 +246,4 @@ export function PropertyFilters({ onFilterChange }) {
   )
 }
 
-// Export both named and default exports
 export default PropertyFilters
