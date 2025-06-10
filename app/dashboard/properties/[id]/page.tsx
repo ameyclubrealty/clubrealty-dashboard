@@ -308,6 +308,10 @@ export default function PropertyViewPage() {
                           <dd className="font-medium">{property.basements || "0"}</dd>
                         </div>
                         <div className="flex justify-between">
+                          <dt className="text-muted-foreground">Parking Available</dt>
+                          <dd className="font-medium">{property.parkingAvailable ? "Yes" : "No"}</dd>
+                        </div>
+                        <div className="flex justify-between">
                           <dt className="text-muted-foreground">Podium Levels</dt>
                           <dd className="font-medium">{property.podiumLevels || "0"}</dd>
                         </div>
