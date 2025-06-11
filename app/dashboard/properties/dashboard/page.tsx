@@ -442,7 +442,7 @@ export default function PropertiesDashboardPage() {
 
           {/* Date Range Picker */}
           <div className="flex flex-col">
-            <Label>Date Range</Label>
+            
             <Popover>
               <PopoverTrigger asChild>
                 <Button
