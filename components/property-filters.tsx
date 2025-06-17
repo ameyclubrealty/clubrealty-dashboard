@@ -137,30 +137,27 @@ export function PropertyFilters({ onFilterChange }) {
       <div className="space-y-2">
         <Label htmlFor="publishedBy" className="block">Published By</Label>
         <div className="flex items-center space-x-2">
-          <Select value={filters.publishedBy || "custom"} onValueChange={handlePublishedByChange}>
+          <Select
+            value={filters.publishedBy?.toLowerCase() || "custom"}
+            onValueChange={(value) => {
+              handlePublishedByChange(value.toLowerCase());
+            }}
+          >
             <SelectTrigger id="publishedBy">
               <SelectValue placeholder="Select a publisher" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="custom">Select Options</SelectItem>
               {publishedByOptions.map(option => (
-                <SelectItem key={option} value={option}>{option}</SelectItem>
+                <SelectItem key={option} value={option.toLowerCase()}>
+                  {option}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {/* {filters.publishedBy === "" && (
-            <Input
-              id="customPublishedBy"
-              placeholder="e.g. John Doe"
-              value={customPublishedBy}
-              onChange={(e) => {
-                setCustomPublishedBy(e.target.value)
-                handleFilterChange("publishedBy", e.target.value)
-              }}
-            />
-          )} */}
         </div>
       </div>
+
 
 
       <div className="space-y-2">

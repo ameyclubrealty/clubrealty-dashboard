@@ -252,6 +252,8 @@ export function PropertyForm() {
   const [availableSubtypes, setAvailableSubtypes] = useState<{ value: string; label: string }[]>([])
   // Add this state for tracking form submission errors at the top of the component, after other state declarations
   const [formError, setFormError] = useState<string | null>(null)
+  // State for unit price in words
+  const [unitPriceInWords, setUnitPriceInWords] = useState("")
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pdfFileInputRef = useRef<HTMLInputElement>(null)
@@ -1230,10 +1232,15 @@ export function PropertyForm() {
                             type="number"
                             placeholder="Price in rupees"
                             value={newUnitType.price || 0}
-                            onChange={(e) =>
-                              setNewUnitType({ ...newUnitType, price: Number.parseFloat(e.target.value) || 0 })
-                            }
+                            onChange={(e) => {
+                              const price = Number.parseFloat(e.target.value) || 0
+                              setNewUnitType({ ...newUnitType, price })
+                              setUnitPriceInWords(price > 0 ? (toWords(price).replace(/\b\w/g, (c: string) => c.toUpperCase()) + " Rupees") : "")
+                            }}
                           />
+                          {unitPriceInWords && (
+                            <p className="text-sm text-muted-foreground mt-1">₹{unitPriceInWords}</p>
+                          )}
                         </div>
                       </div>
 
