@@ -21,6 +21,8 @@ import { ArrowLeft, ArrowRight, Plus, Trash } from "lucide-react"
 import { collection, addDoc, serverTimestamp } from "firebase/firestore"
 import { db } from "@/lib/firebase/config"
 
+
+
 // Add the assignedSaleMemberPhoto field to the schema
 const propertyFormSchema = z.object({
   // Basic Info
@@ -729,6 +731,23 @@ export function PropertyForm() {
 
   // Add this error alert at the beginning of the form, right after the <form> tag
   // Add this right after the opening <form> tag in the return statement
+
+  const publishers = ["Swapnali", "Priyanka", "Vaishnavi"];
+
+  const [customInputVisible, setCustomInputVisible] = useState(false);
+
+  const handleValueChange = (value: string) => {
+    if (value === "custom") {
+      setCustomInputVisible(true);
+      form.setValue("publishedBy", ""); // Clear previous value
+    } else {
+      setCustomInputVisible(false);
+      form.setValue("publishedBy", value);
+    }
+  };
+
+
+
   return (
     <div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -902,20 +921,50 @@ export function PropertyForm() {
                       </div>
                     </div>
                   </div>
-                  <div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="publishedBy">Published By</Label>
-                    <Input
-                      id="publishedBy"
-                      placeholder="e.g. John Doe"
-                      {...form.register("publishedBy")}
-                    />
+                    <Select
+                      onValueChange={handleValueChange}
+                      value={
+                        customInputVisible
+                          ? "custom"
+                          : form.watch("publishedBy") || undefined
+                      }
+                    >
+                      <SelectTrigger id="publishedBy">
+                        <SelectValue placeholder="Select or enter a publisher" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {publishers.map((publisher) => (
+                          <SelectItem key={publisher} value={publisher}>
+                            {publisher}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="custom">Other (Create new)</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {customInputVisible && (
+                      <Input
+                        placeholder="Enter publisher name"
+                        {...form.register("publishedBy", {
+                          required: "Publisher is required",
+                          minLength: { value: 2, message: "Too short" },
+                        })}
+                      />
+                    )}
+
                     {form.formState.errors.publishedBy && (
                       <p className="text-sm font-medium text-destructive mt-1">
                         {form.formState.errors.publishedBy.message}
                       </p>
                     )}
                   </div>
+
+
                   <div>
+
                     <Label htmlFor="description">Description</Label>
                     <Textarea
                       id="description"

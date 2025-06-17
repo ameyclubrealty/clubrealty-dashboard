@@ -323,6 +323,23 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
     },
   })
 
+
+  const publishers = ["Swapnali", "Priyanka", "Vaishnavi"];
+
+  const [customInputVisible, setCustomInputVisible] = useState(false);
+
+  const handleValueChange = (value: string) => {
+    if (value === "custom") {
+      setCustomInputVisible(true);
+      form.setValue("publishedBy", ""); // Clear previous value
+    } else {
+      setCustomInputVisible(false);
+      form.setValue("publishedBy", value);
+    }
+  };
+
+
+
   // Move these hooks to the top level of the component
   const startingPrice = form.watch("startingPrice");
   const [priceInWords, setPriceInWords] = useState("");
@@ -592,6 +609,8 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
     })
   }
 
+
+
   const removeUnitType = (index: number) => {
     setUnitTypes(unitTypes.filter((_, i) => i !== index))
   }
@@ -779,6 +798,9 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
 
   // Add this error alert at the beginning of the form, right after the <form> tag
   // Add this right after the opening <form> tag in the return statement
+
+
+
   return (
     <div>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -949,13 +971,40 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
                       </div>
                     </div>
                   </div>
-                  <div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="publishedBy">Published By</Label>
-                    <Input
-                      id="publishedBy"
-                      placeholder=""
-                      {...form.register("publishedBy")}
-                    />
+                    <Select
+                      onValueChange={handleValueChange}
+                      value={
+                        customInputVisible
+                          ? "custom"
+                          : form.watch("publishedBy") || undefined
+                      }
+                    >
+                      <SelectTrigger id="publishedBy">
+                        <SelectValue placeholder="Select or enter a publisher" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {publishers.map((publisher) => (
+                          <SelectItem key={publisher} value={publisher}>
+                            {publisher}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="custom">Other (Create new)</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    {customInputVisible && (
+                      <Input
+                        placeholder="Enter publisher name"
+                        {...form.register("publishedBy", {
+                          required: "Publisher is required",
+                          minLength: { value: 2, message: "Too short" },
+                        })}
+                      />
+                    )}
+
                     {form.formState.errors.publishedBy && (
                       <p className="text-sm font-medium text-destructive mt-1">
                         {form.formState.errors.publishedBy.message}
