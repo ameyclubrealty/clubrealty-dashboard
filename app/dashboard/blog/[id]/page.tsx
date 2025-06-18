@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { getBlogPost } from '../../../../lib/firebase/blog';
 import Link from 'next/link';
 import Head from 'next/head';
@@ -13,10 +13,14 @@ type BlogPostType = {
   metaTitle?: string;
   metaDescription?: string;
   metaKeywords?: string;
+  isPublished: boolean;
+  createdAt?: string; // Ensure these are strings or convert them to strings
+  updatedAt?: string;
 };
 
 const BlogPost = () => {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string | undefined;
   const [blogPost, setBlogPost] = useState<BlogPostType | null>(null);
 
@@ -25,6 +29,13 @@ const BlogPost = () => {
       const fetchBlogPost = async () => {
         const { success, blogPost } = await getBlogPost(id);
         if (success) {
+          // Convert Date objects to strings if they are not already
+          if (blogPost.createdAt instanceof Date) {
+            blogPost.createdAt = blogPost.createdAt.toLocaleDateString();
+          }
+          if (blogPost.updatedAt instanceof Date) {
+            blogPost.updatedAt = blogPost.updatedAt.toLocaleDateString();
+          }
           setBlogPost(blogPost);
         }
       };
@@ -54,64 +65,84 @@ const BlogPost = () => {
         <meta property="og:type" content="article" />
       </Head>
 
+
       <div className="min-h-screen bg-gray-100">
-        <div className="container mx-auto px-6 py-8">
-          <header className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl ml-1 font-bold text-gray-800">Blog Post / {blogPost.title}</h1>
+        <div className='flex justify-between my-6 mx-6'>
+          <div className='flex'>
+            <button
+              onClick={() => router.back()}
+              className="text-sm border border-[#F28C26] px-2 mt-2 rounded-md text-[#F28C26] hover:underline"
+            >
+              ← Back
+            </button>
+            <h1 className="text-4xl ml-4 font-bold text-gray-800">Blog/{blogPost.title}</h1>
+          </div>
+          <div className="flex space-x-2">
             <Link
               href={`/dashboard/blog/edit/${blogPost.id}`}
-              className="px-4 py-2 bg-[#F28C26] hover:bg-[#f19e4c] text-white rounded transition duration-300"
+              className="px-4 py-2 bg-[#F28C26] text-white rounded hover:bg-[#f1b374] transition duration-300"
             >
-              Edit Content
+              Edit Property
             </Link>
-          </header>
+            <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-400 transition duration-300">
+              Delete
+            </button>
+          </div>
+        </div>
+        <div className="container mx-auto px-6 py-8">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="p-6 ">
+              <div className="flex justify-between items-center mb-4 border-b-2">
+                <h1 className="text-3xl font-bold text-gray-800 my-4">{blogPost.title}</h1>
 
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">{blogPost.title}</h2>
-
-            {/* Metadata Display */}
-            <div className="mb-6 text-sm text-gray-600 space-y-1">
-              {blogPost.metaTitle && (
-                <div>
-                  <span className="font-semibold">Meta Title:</span> {blogPost.metaTitle}
-                </div>
-              )}
-              {blogPost.metaDescription && (
-                <div>
-                  <span className="font-semibold">Meta Description:</span> {blogPost.metaDescription}
-                </div>
-              )}
-              {blogPost.metaKeywords && (
-                <div>
-                  <span className="font-semibold">Meta Keywords:</span> {blogPost.metaKeywords}
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col md:flex-row md:justify-between gap-6">
-              {/* Content */}
-              <div className="md:w-2/3 rounded">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">{blogPost.content}</p>
               </div>
 
-              {/* Images */}
-              <div className="md:w-1/4 p-4 rounded flex flex-wrap items-start justify-start">
-                {blogPost.images && blogPost.images.length > 0 ? (
-                  blogPost.images.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image}
-                      alt={`Blog Image ${index}`}
-                      className="w-32 h-32 object-cover m-2 rounded"
-                    />
-                  ))
-                ) : (
-                  <p className="text-gray-400">No images available</p>
-                )}
+              <div className='grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-4'>
+
+
+                <div className="row-span-2 col-span-2 p-4 border rounded-lg">
+                 <h1 className='text-2xl font-semibold mb-4'> Blog Description:</h1>
+                  <div className="mb-4">
+                    <p className="text-gray-700 whitespace-pre-line">{blogPost.content}</p>
+                  </div>
+                </div>
+
+                <div className=" border rounded-lg bg-gray-50 p-4">
+                  <h2 className="text-xl font-semibold mb-4">Property Summary</h2>
+                  <div className="mb-2">
+                    <p className="text-gray-600"><span className="font-semibold">ID:</span> {blogPost.id}</p>
+                  </div>
+                  <div className="mb-2">
+                    <p className="text-gray-600"><span className="font-semibold">Created:</span> {blogPost.createdAt || 'N/A'}</p>
+                  </div>
+                  <div className="mb-2">
+                    <p className="text-gray-600"><span className="font-semibold">Last Updated:</span> {blogPost.updatedAt || 'N/A'}</p>
+                  </div>
+                  <div className="mb-2">
+                    <p className="text-gray-600"><span className="font-semibold">Published:</span> {blogPost.isPublished ? 'Yes' : 'No'}</p>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold mb-2">Featured Images</h3>
+                  <div className="flex flex-wrap gap-4">
+                    {blogPost.images && blogPost.images.length > 0 ? (
+                      blogPost.images.map((image, index) => (
+                        <img
+                          key={index}
+                          src={image}
+                          alt={`Blog Image ${index}`}
+                          className="w-48 h-48 object-cover rounded"
+                        />
+                      ))
+                    ) : (
+                      <p className="text-gray-400">No images available</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </>
