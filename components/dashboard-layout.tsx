@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
-import { Building, Home, LayoutDashboard, LogOut, Settings, Users, Leaf } from "lucide-react"
+import { Building, Home, LayoutDashboard, LogOut, Settings, Users, Leaf, MessageSquareDiff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -85,6 +85,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       label: "Go Green",
       icon: Leaf,
       active: pathname.includes("/dashboard/go-green"),
+    },
+     {
+      href: "/dashboard/blog",
+      label: "Blog",
+      icon: MessageSquareDiff ,
+      active: pathname.includes("/dashboard/blog"),
     },
     {
       href: "/dashboard/settings",

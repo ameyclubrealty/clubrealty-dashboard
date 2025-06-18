@@ -18,7 +18,8 @@ export default function RootLayout({
         <meta name="description" content="Club Realty property management admin dashboard" />
         <link rel="icon" href="/images/favicon.ico" />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className}
+        cz-shortcut-listen="true">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
           <Toaster />
@@ -29,5 +30,5 @@ export default function RootLayout({
 }
 
 export const metadata = {
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 };
