@@ -1,9 +1,11 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getBlogPost } from '../../../../lib/firebase/blog';
+import { deleteBlogPost, getBlogPost } from '../../../../lib/firebase/blog';
 import Link from 'next/link';
 import Head from 'next/head';
+import Image from 'next/image';
+import DOMPurify from 'dompurify';
 
 type BlogPostType = {
   id: string;
@@ -51,6 +53,18 @@ const BlogPost = () => {
     );
   }
 
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this blog post?')) {
+      const { success } = await deleteBlogPost(id);
+      if (success) {
+        alert('Blog post deleted successfully');
+        router.push(`/dashboard/blog/`);
+      } else {
+        alert('Failed to delete the blog post');
+      }
+    }
+  };
+
   return (
     <>
       <Head>
@@ -65,9 +79,8 @@ const BlogPost = () => {
         <meta property="og:type" content="article" />
       </Head>
 
-
-      <div className="min-h-screen bg-gray-100">
-        <div className='flex justify-between my-6 mx-6'>
+      <div className="min-h-screen bg-white">
+        <div className='flex justify-between mt-6 mx-6'>
           <div className='flex'>
             <button
               onClick={() => router.back()}
@@ -84,67 +97,76 @@ const BlogPost = () => {
             >
               Edit Property
             </Link>
-            <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-400 transition duration-300">
+            <button onClick={() => handleDelete(blogPost.id)} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-400 transition duration-300">
               Delete
             </button>
           </div>
         </div>
-        <div className="container mx-auto px-6 py-8">
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="p-6 ">
-              <div className="flex justify-between items-center mb-4 border-b-2">
-                <h1 className="text-3xl font-bold text-gray-800 my-4">{blogPost.title}</h1>
 
+
+        <div className="container mx-auto px-6 py-8">
+
+          <div className="bg-white rounded-lg  overflow-hidden">
+
+
+            <div className='grid grid-cols-1 mb-4 md:grid-cols-3 md:grid-rows-2 gap-4'>
+
+
+              <div className="row-span-2 col-span-2 p-4 border rounded-lg">
+
+                <div className="flex justify-between items-center mb-4 border-b-2">
+                  <h1 className="text-3xl font-bold text-gray-800 my-4">{blogPost.title}</h1>
+                </div>
+
+                <h1 className="text-2xl font-semibold mb-4">Blog Description:</h1>
+                <div className="mb-4">
+                  <div
+                    className="text-gray-700 whitespace-pre-line"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blogPost.content) }}
+                  />
+                </div>
               </div>
 
-              <div className='grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-4'>
-
-
-                <div className="row-span-2 col-span-2 p-4 border rounded-lg">
-                 <h1 className='text-2xl font-semibold mb-4'> Blog Description:</h1>
-                  <div className="mb-4">
-                    <p className="text-gray-700 whitespace-pre-line">{blogPost.content}</p>
-                  </div>
+              <div className=" border rounded-lg bg-gray-50 p-4">
+                <h2 className="text-xl font-semibold mb-4">Blog Summary</h2>
+                <div className="mb-2">
+                  <p className="text-gray-600"><span className="font-semibold">ID:</span> {blogPost.id}</p>
                 </div>
-
-                <div className=" border rounded-lg bg-gray-50 p-4">
-                  <h2 className="text-xl font-semibold mb-4">Property Summary</h2>
-                  <div className="mb-2">
-                    <p className="text-gray-600"><span className="font-semibold">ID:</span> {blogPost.id}</p>
-                  </div>
-                  <div className="mb-2">
-                    <p className="text-gray-600"><span className="font-semibold">Created:</span> {blogPost.createdAt || 'N/A'}</p>
-                  </div>
-                  <div className="mb-2">
-                    <p className="text-gray-600"><span className="font-semibold">Last Updated:</span> {blogPost.updatedAt || 'N/A'}</p>
-                  </div>
-                  <div className="mb-2">
-                    <p className="text-gray-600"><span className="font-semibold">Published:</span> {blogPost.isPublished ? 'Yes' : 'No'}</p>
-                  </div>
+                <div className="mb-2">
+                  <p className="text-gray-600"><span className="font-semibold">Created:</span> {blogPost.createdAt || 'N/A'}</p>
                 </div>
+                <div className="mb-2">
+                  <p className="text-gray-600"><span className="font-semibold">Last Updated:</span> {blogPost.updatedAt || 'N/A'}</p>
+                </div>
+                <div className="mb-2">
+                  <p className="text-gray-600"><span className="font-semibold">Published:</span> {blogPost.isPublished ? 'Yes' : 'No'}</p>
+                </div>
+              </div>
 
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-2">Featured Images</h3>
-                  <div className="flex flex-wrap gap-4">
-                    {blogPost.images && blogPost.images.length > 0 ? (
-                      blogPost.images.map((image, index) => (
-                        <img
-                          key={index}
-                          src={image}
-                          alt={`Blog Image ${index}`}
-                          className="w-48 h-48 object-cover rounded"
-                        />
-                      ))
-                    ) : (
-                      <p className="text-gray-400">No images available</p>
-                    )}
-                  </div>
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-2">Featured Images</h3>
+                <div className="flex flex-wrap gap-4">
+                  {blogPost.images && blogPost.images.length > 0 ? (
+                    blogPost.images.map((image, index) => (
+                      <img
+                        key={index}
+                        src={image}
+                        alt={`Blog Image ${index}`}
+                        className="w-48 h-48 object-cover rounded"
+                      />
+                    ))
+                  ) : (
+                    <p className="text-gray-400">No images available</p>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
+
       </div>
+
+
     </>
   );
 };

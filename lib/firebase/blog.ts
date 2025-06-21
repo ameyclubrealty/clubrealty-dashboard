@@ -132,16 +132,41 @@ export async function deleteBlogPost(id) {
 
 export async function uploadBlogImage(file, blogId) {
   try {
+    // If blogId is not provided, use a temporary folder
+    const folderPath = blogId ? `blogPosts/${blogId}` : 'blogPosts/temp';
     const uniqueFileName = `${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, `blogPosts/${blogId}/${uniqueFileName}`);
+    const storageRef = ref(storage, `${folderPath}/${uniqueFileName}`);
+    
+    console.log('Uploading to path:', `${folderPath}/${uniqueFileName}`);
+    
     const snapshot = await uploadBytes(storageRef, file);
     const downloadURL = await getDownloadURL(snapshot.ref);
-    return { success: true, url: downloadURL };
+    
+    console.log('Upload successful, URL:', downloadURL);
+    
+    return { 
+      success: true, 
+      url: downloadURL,
+      path: `${folderPath}/${uniqueFileName}` // Return the path for potential cleanup
+    };
   } catch (error) {
     console.error("Error in uploadBlogImage:", error);
+    
+    // Provide more specific error messages
+    let errorMessage = "Failed to upload image";
+    if (error.code === 'storage/unauthorized') {
+      errorMessage = "Storage access denied. Please check Firebase Storage rules.";
+    } else if (error.code === 'storage/quota-exceeded') {
+      errorMessage = "Storage quota exceeded. Please try a smaller image.";
+    } else if (error.code === 'storage/invalid-format') {
+      errorMessage = "Invalid file format. Please use JPG, PNG, or GIF.";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
     return {
       success: false,
-      error: error.message || "Failed to upload image",
+      error: errorMessage,
     };
   }
 }

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { addBlogPost, uploadBlogImage, updateBlogPost } from '../../../../lib/firebase/blog';
+import Editor from '../editor';
 
 const CreateBlogPost = () => {
   const router = useRouter();
@@ -51,6 +52,7 @@ const CreateBlogPost = () => {
     try {
       const selectedCategory = useCustomCategory ? customCategory : category;
 
+      // First, create the blog post to get the ID
       const { success, id, error } = await addBlogPost({
         title,
         content,
@@ -67,22 +69,33 @@ const CreateBlogPost = () => {
         return;
       }
 
+      // Then upload images if any
       if (images.length > 0) {
+        console.log('Uploading', images.length, 'images for blog post:', id);
+        
         const imageUrls = await Promise.all(
-          images.map(async (image) => {
-            const { success, url } = await uploadBlogImage(image, id);
-            return success ? url : null;
+          images.map(async (image, index) => {
+            console.log(`Uploading image ${index + 1}/${images.length}:`, image.name);
+            const { success, url, error } = await uploadBlogImage(image, id);
+            if (!success) {
+              console.error(`Failed to upload image ${image.name}:`, error);
+              alert(`Failed to upload image: ${image.name}. ${error}`);
+              return null;
+            }
+            console.log(`Successfully uploaded image ${index + 1}:`, url);
+            return url;
           })
         );
 
         const validImageUrls = imageUrls.filter((url) => url !== null);
 
         if (validImageUrls.length > 0) {
+          console.log('Updating blog post with', validImageUrls.length, 'images');
           await updateBlogPost(id, { images: validImageUrls });
         }
       }
 
-      alert(`Blog post created with ID: ${id}`);
+      alert(`Blog post created successfully with ID: ${id}`);
       router.push('/dashboard/blog');
     } catch (error) {
       console.error('An error occurred:', error);
@@ -157,7 +170,7 @@ const CreateBlogPost = () => {
               </div>
             )}
 
-             {/* Meta Description */}
+            {/* Meta Description */}
             <div>
               <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700">
                 Meta Description
@@ -184,8 +197,6 @@ const CreateBlogPost = () => {
               />
             </div>
 
-           
-
             {/* Meta Keywords */}
             <div className="md:col-span-2">
               <label htmlFor="metaKeywords" className="block text-sm font-medium text-gray-700">
@@ -202,16 +213,14 @@ const CreateBlogPost = () => {
 
             {/* Content */}
             <div className="md:col-span-2">
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
                 Blog Content
               </label>
-              <textarea
-                id="content"
+              <Editor
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 h-40"
-              ></textarea>
+                onChange={setContent}
+                placeholder="Write your blog content here..."
+              />
             </div>
 
             {/* Published Toggle */}

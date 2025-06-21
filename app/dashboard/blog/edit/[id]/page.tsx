@@ -1,6 +1,8 @@
+// EditBlogPost.js
 'use client'
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Editor from '../../editor';
 import { getBlogPost, updateBlogPost, uploadBlogImage } from '../../../../../lib/firebase/blog';
 
 const EditBlogPost = () => {
@@ -46,8 +48,6 @@ const EditBlogPost = () => {
       fetchBlogPost();
     }
   }, [id]);
-
-
 
   useEffect(() => {
     const previews = newImages.map((file) => URL.createObjectURL(file));
@@ -182,7 +182,6 @@ const EditBlogPost = () => {
               </div>
             )}
 
-
             {/* Meta Description */}
             <div>
               <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700">
@@ -210,8 +209,6 @@ const EditBlogPost = () => {
               />
             </div>
 
-
-
             {/* Meta Keywords */}
             <div className="md:col-span-2">
               <label htmlFor="metaKeywords" className="block text-sm font-medium text-gray-700">
@@ -228,16 +225,14 @@ const EditBlogPost = () => {
 
             {/* Content */}
             <div className="md:col-span-2">
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
                 Blog Content
               </label>
-              <textarea
-                id="content"
+              <Editor
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 h-40"
-              ></textarea>
+                onChange={setContent}
+                placeholder="Write your blog content here..."
+              />
             </div>
 
             {/* Published Toggle */}

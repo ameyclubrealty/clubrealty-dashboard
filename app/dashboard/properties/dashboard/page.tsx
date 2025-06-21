@@ -158,7 +158,7 @@ export default function PropertiesDashboardPage() {
     bathrooms?: string
     [key: string]: any
     publishedBy: string
-    startDate?: string;  // in yyyy-mm-dd format
+    startDate?: string;  
     endDate?: string;
   }
 

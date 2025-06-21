@@ -3,6 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { deleteBlogPost, getBlogPosts } from '../../../lib/firebase/blog';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { DateRange } from 'react-day-picker';
+import { DateRangeFilter } from './dateFilter';
+import { CombinedFilterButton } from './filterData';
+import { Menu } from '@headlessui/react';
+import { EllipsisVerticalIcon, EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import DOMPurify from 'dompurify';
 
 interface BlogPost {
   id: string;
@@ -20,7 +26,13 @@ const BlogList = () => {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [filter, setFilter] = useState('all');
   const [uniqueCategoryCount, setUniqueCategoryCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true); // State to track loading
+  const [isLoading, setIsLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
 
   useEffect(() => {
     const fetchBlogPosts = async () => {
@@ -49,18 +61,34 @@ const BlogList = () => {
   };
 
   const filteredBlogPosts = blogPosts.filter((post) => {
-    if (filter === 'all') return true;
-    // Add more filter conditions as needed
-    return false;
+    const matchStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'published' && post.isPublished) ||
+      (statusFilter === 'draft' && !post.isPublished);
+
+    const matchCategory = categoryFilter === '' || post.category === categoryFilter;
+
+    const matchTitle = post.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const createdAt = post.createdAt ? new Date(post.createdAt) : null;
+    const withinRange =
+      !dateRange?.from ||
+      (!dateRange?.to && createdAt !== null && createdAt >= dateRange.from) ||
+      (createdAt && dateRange.from && dateRange.to && createdAt >= dateRange.from && createdAt <= dateRange.to);
+
+    return matchStatus && matchCategory && matchTitle && withinRange;
   });
+
+
+
 
   // Calculate the number of published blogs
   const publishedBlogsCount = blogPosts.filter(post => post.isPublished).length;
 
   useEffect(() => {
-    // Extract unique categories
-    const uniqueCategories = new Set(blogPosts.map(post => post.category || 'Uncategorized'));
-    setUniqueCategoryCount(uniqueCategories.size);
+    const uniqueCategories = Array.from(new Set(blogPosts.map(post => post.category || 'Uncategorized')));
+    setCategoryOptions(uniqueCategories);
+    setUniqueCategoryCount(uniqueCategories.length);
   }, [blogPosts]);
 
   const handleRefresh = () => {
@@ -68,19 +96,22 @@ const BlogList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Blogs</h1>
+          <div className='ml-3'>
+            <h2 className="text-3xl font-bold tracking-tight">Blog</h2>
+            <p className="text-muted-foreground mt-1">Manage and track your blog</p>
+          </div>
           <div className="flex space-x-4">
-            <button onClick={handleRefresh} className="flex items-center px-4 py-2 bg-white rounded-lg shadow text-gray-700 hover:bg-gray-50">
+            <button onClick={handleRefresh} className="flex items-center border px-3 py-2 bg-white rounded-lg text-gray-700 hover:bg-gray-50">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1.001 1.001 0 002.684-.114A7.002 7.002 0 0119 8.101V18a1 1 0 01-1 1H4a1 1 0 01-1-1V2zm5 13a1 1 0 01-1-1h8a1 1 0 011 1h-8zM3 3a1 1 0 011-1h12a1 1 0 011 1v3H3V3z" clipRule="evenodd" />
               </svg>
               Refresh
             </button>
             <Link href="/dashboard/blog/create">
-              <button className="flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg shadow hover:bg-orange-600">
+              <button className="flex items-center px-3 py-2 bg-[#F28C26] border text-white rounded-lg hover:bg-[#ffb66d]">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
                 </svg>
@@ -90,8 +121,8 @@ const BlogList = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-4">
+        <div className="grid grid-cols-1 ml-3 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-gray-500">Total Blogs</p>
@@ -104,7 +135,7 @@ const BlogList = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-gray-500">Draft Blogs</p>
@@ -117,7 +148,7 @@ const BlogList = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-gray-500">Published Blogs</p>
@@ -131,7 +162,7 @@ const BlogList = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-lg border p-4">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-gray-500">Category</p>
@@ -147,11 +178,35 @@ const BlogList = () => {
           </div>
         </div>
 
-        <div className="flex justify-between my-2">
-          <h1 className="text-2xl font-bold mb-6">Blog Lists :</h1>
+        {/* Filter */}
+        <div className="flex flex-wrap gap-4 mb-6 ml-3 items-end">
+          <div className='w-[49rem] h-[2.5rem]'>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by title..."
+              className=" border w-full px-3 py-3 h-full rounded text-sm "
+            />
+          </div>
+
+          <DateRangeFilter dateRange={dateRange} setDateRange={setDateRange} />
+
+
+          <CombinedFilterButton
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            categoryFilter={categoryFilter}
+            setCategoryFilter={setCategoryFilter}
+            categoryOptions={categoryOptions}
+          />
         </div>
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 border bg-white rounded-lg">
+
+          <div className="flex justify-between border-b-2 mb-2 ">
+            <h1 className="text-2xl font-bold mb-4">Blog Lists :</h1>
+          </div>
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="text-xl text-gray-600">Loading blog posts...</div>
@@ -161,41 +216,118 @@ const BlogList = () => {
               <div className="text-xl text-gray-600 mb-2">No blog posts available.</div>
               <p className="text-gray-500">Start by creating a new blog post.</p>
             </div>
-          ):(
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4">
               {filteredBlogPosts.map((post) => (
                 <div key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+                  {/* Image + Top Overlay */}
                   {post.images && post.images.length > 0 && (
-                    <div className="w-full h-48 overflow-hidden">
+                    <div className="relative w-full h-48">
                       <img
                         src={post.images[0]}
                         alt={post.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover rounded-t-lg transition-transform duration-300 ease-in-out hover:scale-105"
                       />
+
+                      {/* Bottom Left: Status */}
+                      <div className="absolute bottom-2 left-2 bg-white text-gray-800 text-xs font-medium px-2 py-1 rounded-lg shadow">
+                        {post.isPublished ? 'Published' : 'Draft'}
+                      </div>
+
+                      {/* Bottom Right: Dropdown */}
+                      <div className="absolute bottom-2 right-2">
+                        <Menu as="div" className="relative inline-block text-left">
+                          <Menu.Button className="bg-white p-1.5 rounded-lg shadow hover:bg-gray-100">
+                            <EllipsisVerticalIcon className="h-5 w-5 text-gray-600" />
+                          </Menu.Button>
+
+                          <Menu.Items className="absolute right-0 z-10 mt-2 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div className="p-1 text-sm">
+                              <div className="px-3 py-1 text-gray-500 font-semibold">Actions</div>
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <Link href={`/dashboard/blog/${post.id}`}>
+                                    <button
+                                      className={`${active ? 'bg-gray-100' : ''} flex items-center w-full px-3 py-2 text-sm text-gray-700`}
+                                    >
+                                      <EyeIcon className="w-4 h-4 mr-2" /> View
+                                    </button>
+                                  </Link>
+                                )}
+                              </Menu.Item>
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <Link href={`/dashboard/blog/edit/${post.id}`}>
+                                    <button
+                                      className={`${active ? 'bg-gray-100' : ''} flex items-center w-full px-3 py-2 text-sm text-gray-700`}
+                                    >
+                                      <PencilIcon className="w-4 h-4 mr-2" /> Edit
+                                    </button>
+                                  </Link>
+                                )}
+                              </Menu.Item>
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    onClick={() => handleDelete(post.id)}
+                                    className={`${active ? 'bg-red-50 text-red-700' : 'text-red-600'} flex items-center w-full px-3 py-2 text-sm`}
+                                  >
+                                    <TrashIcon className="w-4 h-4 mr-2" /> Delete
+                                  </button>
+                                )}
+                              </Menu.Item>
+                            </div>
+                          </Menu.Items>
+                        </Menu>
+                      </div>
                     </div>
                   )}
-                  <div className="p-4 flex-grow">
-                    <h2 className="text-xl font-semibold text-gray-800 cursor-pointer hover:underline">
-                      <Link href={`/dashboard/blog/${post.id}`}>
-                        {post.title}
-                      </Link>
+
+                  {/* Content */}
+                  <div className="p-4 flex-grow flex flex-col">
+                    {/* Title */}
+                    <h2 className="text-lg font-semibold text-gray-800 cursor-pointer hover:underline border-b pb-1">
+                      <Link href={`/dashboard/blog/${post.id}`}>{post.title}</Link>
                     </h2>
-                    <p className="mt-2 text-gray-600">{post.content.substring(0, 100)} ...</p>
+
+                    {/* Except */}
+
+                    <div className="mt-2 text-gray-600 text-sm" >
+                      <div
+                        className="text-gray-700 whitespace-pre-line"
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content.substring(0,100)) }}
+                      />.....
+                    </div>
+
+                    {/* Read More Button */}
+                    <div className="flex justify-start mt-2">
+                      <Link href={`/dashboard/blog/${post.id}`}>
+                        <button className="underline underline-offset-2 text-sm text-[#ef9337] hover:text-[#ba7632]">
+                          Read More
+                        </button>
+                      </Link>
+                    </div>
+
+                    {/* Category & Publish Status */}
+                    <div className="mt-4 space-y-1 text-sm text-gray-700">
+                      <p>
+                        <span className="font-medium">Category:</span>{' '}
+                        <span className="text-gray-400">{post.category || 'N/A'}</span>
+                      </p>
+                      <p>
+                        <span className="font-medium">Published:</span>{' '}
+                        <span className="text-gray-400">{post.isPublished ? 'Yes' : 'No'}</span>
+                      </p>
+                    </div>
                   </div>
-                  <div className="p-4 flex justify-between">
-                    <Link href={`/dashboard/blog/${post.id}`} className="w-1/2 mr-2">
-                      <button className="w-full px-4 border py-1 border-[#F28C26] text-sm hover:bg-[#ee963e] text-[#ef9337] hover:text-white rounded">
-                        Read More
-                      </button>
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(post.id)}
-                      className="w-1/2 ml-2 px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                    >
-                      Delete
-                    </button>
+
+                  {/* Footer */}
+                  <div className="flex justify-between items-center px-4 py-2 border-t text-xs text-gray-500">
+                    <span>ID: <span className="text-gray-400">{post.id.substring(0, 10)}...</span></span>
+                    <span>{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'N/A'}</span>
                   </div>
                 </div>
+
               ))}
             </div>
           )}
