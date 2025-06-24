@@ -36,36 +36,60 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
     if (!range || !editorRef.current) return;
 
     editorRef.current.focus();
-    
+
     const element = document.createElement(tag);
     Object.entries(attributes).forEach(([key, value]) => {
       element.setAttribute(key, value);
     });
-    
+
     range.surroundContents(element);
     handleInput();
   };
 
   const toggleFormat = (tag: string) => {
-    const range = getSelection();
-    if (!range || !editorRef.current) return;
+  const range = getSelection();
+  if (!range || !editorRef.current) return;
 
-    editorRef.current.focus();
-    
-    const element = document.createElement(tag);
-    range.surroundContents(element);
+  editorRef.current.focus();
+
+  const element = document.createElement(tag);
+
+  try {
+    // Extract the selected content
+    const selectedContent = range.extractContents();
+
+    // Append the content inside the new tag
+    element.appendChild(selectedContent);
+
+    // Insert the formatted element back into the DOM
+    range.insertNode(element);
+
+    // Move cursor after the inserted node
+    range.setStartAfter(element);
+    range.setEndAfter(element);
+
+    const selection = window.getSelection();
+    if (selection) {
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+
     handleInput();
-  };
+  } catch (error) {
+    console.warn('toggleFormat failed:', error);
+  }
+};
+
 
   const formatHeading = (level: string) => {
     const range = getSelection();
     if (!range || !editorRef.current) return;
 
     editorRef.current.focus();
-    
+
     // Get the selected text
     const selectedText = range.toString();
-    
+
     // Create heading element
     const heading = document.createElement(level);
     if (selectedText) {
@@ -77,19 +101,19 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
       // If no text selected, create empty heading
       heading.textContent = 'Heading';
       range.insertNode(heading);
-      
+
       // Select the text so user can type over it
       const newRange = document.createRange();
       newRange.setStart(heading.firstChild!, 0);
       newRange.setEnd(heading.firstChild!, heading.textContent.length);
-      
+
       const selection = window.getSelection();
       if (selection) {
         selection.removeAllRanges();
         selection.addRange(newRange);
       }
     }
-    
+
     handleInput();
   };
 
@@ -98,15 +122,15 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
     if (!range || !editorRef.current) return;
 
     editorRef.current.focus();
-    
+
     // Get the selected text
     const selectedText = range.toString();
-    
+
     // Create list and list item
     const listType = ordered ? 'ol' : 'ul';
     const list = document.createElement(listType);
     const listItem = document.createElement('li');
-    
+
     if (selectedText) {
       listItem.textContent = selectedText;
       // Replace the selected text with the list
@@ -118,27 +142,27 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
       listItem.textContent = 'List item';
       list.appendChild(listItem);
       range.insertNode(list);
-      
+
       // Select the text so user can type over it
       const newRange = document.createRange();
       newRange.setStart(listItem.firstChild!, 0);
       newRange.setEnd(listItem.firstChild!, listItem.textContent.length);
-      
+
       const selection = window.getSelection();
       if (selection) {
         selection.removeAllRanges();
         selection.addRange(newRange);
       }
     }
-    
+
     handleInput();
   };
 
   const execCommand = (command: string, value?: string) => {
     if (!editorRef.current) return;
-    
+
     editorRef.current.focus();
-    
+
     switch (command) {
       case 'bold':
         toggleFormat('strong');
@@ -148,6 +172,9 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
         break;
       case 'underline':
         toggleFormat('u');
+        break;
+      case 'paragraph':
+        toggleFormat('p');
         break;
       case 'strikeThrough':
         toggleFormat('s');
@@ -209,6 +236,7 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
     { label: 'I', command: 'italic', title: 'Italic' },
     { label: 'U', command: 'underline', title: 'Underline' },
     { label: 'S', command: 'strikeThrough', title: 'Strikethrough' },
+    { label: 'P', command: 'paragraph', title: 'Paragraph' },
     { label: 'H1', command: 'formatBlock', value: '<h1>', title: 'Heading 1' },
     { label: 'H2', command: 'formatBlock', value: '<h2>', title: 'Heading 2' },
     { label: 'H3', command: 'formatBlock', value: '<h3>', title: 'Heading 3' },
@@ -241,7 +269,7 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
           </button>
         ))}
       </div>
-      
+
       {/* Editor */}
       <div
         ref={editorRef}
@@ -253,7 +281,7 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
         data-placeholder={placeholder}
         suppressContentEditableWarning
       />
-      
+
       <style jsx>{`
         .rich-text-editor {
           border: 1px solid #e5e7eb;
