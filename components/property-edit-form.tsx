@@ -121,6 +121,8 @@ const propertyFormSchema = z.object({
   virtualTourLink: z.string().optional(),
   keyFeatures: z.array(z.string()).optional(),
   assignedSaleMemberPhoto: z.string().optional(),
+  showInRecent: z.boolean().default(false),
+  recentOrder: z.coerce.number().min(1, 'Order must be between 1 and 4').max(4, 'Order must be between 1 and 4').optional(),
 })
 
 type PropertyFormValues = z.infer<typeof propertyFormSchema>
@@ -319,7 +321,9 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
       virtualTourLink: "",
       keyFeatures: [],
       assignedSaleMemberPhoto: "",
-      publishedBy: ""
+      publishedBy: "",
+      showInRecent: false,
+      recentOrder: undefined,
     },
   })
 
@@ -414,6 +418,8 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
             virtualTourLink: property.virtualTourLink || "",
             keyFeatures: property.keyFeatures || [],
             assignedSaleMemberPhoto: property.assignedSaleMemberPhoto || "",
+            showInRecent: property.showInRecent || false,
+            recentOrder: property.recentOrder || undefined,
           })
 
           setUploadedImages(property.images || [])
@@ -692,7 +698,9 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
         virtualTourLink: data.virtualTourLink || "",
         propertySubtype: data.propertySubtype, // Ensure propertySubtype is explicitly included
         assignedSaleMemberPhoto: data.assignedSaleMemberPhoto || "", // Ensure photo field is included
-        publishedBy: data.publishedBy || ""
+        publishedBy: data.publishedBy || "",
+        showInRecent: data.showInRecent || false,
+        recentOrder: data.recentOrder || undefined,
       }
 
       console.log("Submitting property update:", propertyId, propertyData)
@@ -1044,6 +1052,35 @@ export function PropertyEditForm({ propertyId }: { propertyId: string }) {
                         onCheckedChange={(checked) => form.setValue("published", checked)}
                       />
                     </div>
+                  </div>
+
+                  <div className="mb-6 flex flex-col gap-6">
+
+                    <div className="flex gap-4 ">
+                      <Label htmlFor="showInRecent" className="mt-2">Show in Recent Property Listing </Label>
+                      <Switch
+                        id="showInRecent"
+                        checked={form.watch("showInRecent")}
+                        onCheckedChange={val => form.setValue("showInRecent", val)}
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Label htmlFor="recentOrder" className={form.watch("showInRecent") ? 'mt-2' : 'mt-2 opacity-50'}>
+                        Recent Property Order
+                      </Label>
+                      <Input
+                        id="recentOrder"
+                        type="number"
+                        min={1}
+                        max={4}
+                        disabled={!form.watch("showInRecent")}
+                        {...form.register("recentOrder")}
+                        className="w-24"
+                        placeholder="Order"
+                      />
+                    </div>
+
                   </div>
                 </div>
               </CardContent>

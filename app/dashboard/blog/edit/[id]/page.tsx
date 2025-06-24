@@ -259,7 +259,7 @@ const EditBlogPost = () => {
 
             {/* Image Upload */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Add Images</label>
+              <label className="block text-sm font-medium text-gray-700">Add Images(size: 517 × 291 px)</label>
               <input
                 type="file"
                 multiple

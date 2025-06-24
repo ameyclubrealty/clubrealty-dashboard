@@ -27,7 +27,13 @@ import { useToast } from "@/hooks/use-toast"
 import { Spinner } from "@/components/ui/spinner"
 import { Bed, Bath, SquareIcon as SquareFoot, MapPin, MoreHorizontal, Pencil, Trash, Eye } from "lucide-react"
 
-export function PropertyCard({ property, onDelete }) {
+// Add Property type for prop typing
+interface Property {
+  id: string;
+  [key: string]: any;
+}
+
+export function PropertyCard({ property, onDelete }: { property: Property; onDelete?: any }) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const { toast } = useToast()
@@ -171,6 +177,13 @@ const formatPrice = (price) => {
             {formatListingIntent(listingIntent)}
           </Badge>
 
+          {/* Recent property badge at the top center */}
+          {property.showInRecent && typeof property.recentOrder === 'number' && property.recentOrder >= 1 && property.recentOrder <= 4 && (
+            <Badge className="absolute top-2 left-1/2 -translate-x-1/2 bg-[#f58626] text-white px-4 py-1 text-xs font-semibold shadow-none z-10">
+              Recent #{property.recentOrder}
+            </Badge>
+          )}
+
           {/* Price badge at top right */}
           <Badge className="absolute top-2 right-2 bg-white text-black px-3 py-1 text-xs font-medium shadow-sm">
             {/* {formattedPrice} */}
@@ -178,8 +191,8 @@ const formatPrice = (price) => {
           </Badge>
 
             <Badge className="absolute bottom-2 left-2 bg-white text-black px-3 py-1 text-xs font-medium shadow-sm">
-            {/* {formattedPrice} */}
-            {property.publishedBy}
+            {/* Published BY */}
+            {property.publishedBy ? property.publishedBy : 'Admin'}
           </Badge>
 
           {/* Actions dropdown at bottom right */}

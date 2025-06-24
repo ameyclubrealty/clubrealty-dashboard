@@ -105,6 +105,8 @@ const propertyFormSchema = z.object({
 
   // System fields
   published: z.boolean().default(true),
+  showInRecent: z.boolean().default(false),
+  recentOrder: z.coerce.number().min(1, 'Order must be between 1 and 4').max(4, 'Order must be between 1 and 4').optional(),
 })
 
 type PropertyFormValues = z.infer<typeof propertyFormSchema>
@@ -305,7 +307,9 @@ export function PropertyForm() {
       detailsPdf: "",
       virtualTourLink: "",
       published: false,
-      publishedBy: ""
+      publishedBy: "",
+      showInRecent: false,
+      recentOrder: undefined,
     },
   })
 
@@ -1011,6 +1015,33 @@ export function PropertyForm() {
                         onCheckedChange={(checked) => form.setValue("published", checked)}
                       />
                     </div>
+                  </div>
+                  <div className="mb-6 flex flex-col gap-6">
+                    <div>
+                      <Label htmlFor="showInRecent">Show in Recent Property Listing </Label>
+                      <Switch
+                        id="showInRecent"
+                        checked={form.watch("showInRecent")}
+                        onCheckedChange={val => form.setValue("showInRecent", val)}
+                      />
+                    </div>
+
+                    <div className="flex gap-2"> 
+                    <Label htmlFor="recentOrder" className={form.watch("showInRecent") ? 'mt-4' : 'mt-4 opacity-50'}>
+                      Recent Property Order
+                    </Label>
+                      <Input
+                        id="recentOrder"
+                        type="number"
+                        min={1}
+                        max={4}
+                        disabled={!form.watch("showInRecent")}
+                        {...form.register("recentOrder")}
+                        className="w-24"
+                        placeholder="Order"
+                      />
+                    </div>
+
                   </div>
                 </div>
               </CardContent>

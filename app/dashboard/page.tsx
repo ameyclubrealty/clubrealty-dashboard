@@ -1,8 +1,24 @@
+"use client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Building, Home, LineChart, Users } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function DashboardPage() {
+  const [visitorCount, setVisitorCount] = useState<number | null>(null);
+  useEffect(() => {
+    async function fetchVisitorCount() {
+      try {
+        // Use the full URL if dashboard runs on a different port/domain
+        const res = await fetch("http://localhost:3000/api/increment-visitor");
+        const data = await res.json();
+        setVisitorCount(data.count);
+      } catch {
+        setVisitorCount(null);
+      }
+    }
+    fetchVisitorCount();
+  }, []);
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -16,7 +32,7 @@ export default function DashboardPage() {
           <TabsTrigger value="marketing">Marketing</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Properties</CardTitle>
@@ -57,6 +73,18 @@ export default function DashboardPage() {
                 <p className="text-xs text-muted-foreground">+2% from last month</p>
               </CardContent>
             </Card>
+
+            {/* Visitors Card */}
+            {/* <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Website Visitors</CardTitle>
+                <Users className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{visitorCount !== null ? visitorCount : '...'}</div>
+                <p className="text-xs text-muted-foreground">Total unique visitors</p>
+              </CardContent>
+            </Card> */}
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
