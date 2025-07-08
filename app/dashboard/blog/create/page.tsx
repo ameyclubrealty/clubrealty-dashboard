@@ -18,6 +18,7 @@ const CreateBlogPost = () => {
   const [category, setCategory] = useState('');
   const [customCategory, setCustomCategory] = useState('');
   const [useCustomCategory, setUseCustomCategory] = useState(false);
+  const [slug, setSlug] = useState('');
 
   const predefinedCategories = [
     "Buying Guides",
@@ -34,6 +35,17 @@ const CreateBlogPost = () => {
       previews.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [images]);
+
+  useEffect(() => {
+    // Auto-generate slug from title if slug is empty or matches previous title
+    setSlug(
+      title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+    );
+  }, [title]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -61,6 +73,7 @@ const CreateBlogPost = () => {
         metaKeywords,
         isPublished,
         category: selectedCategory,
+        slug,
       });
 
       if (!success || !id) {
@@ -208,6 +221,22 @@ const CreateBlogPost = () => {
                 value={metaKeywords}
                 onChange={(e) => setMetaKeywords(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+
+            {/* Slug Input */}
+            <div>
+              <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
+                URL Slug
+              </label>
+              <input
+                type="text"
+                id="slug"
+                value={slug}
+                onChange={e => setSlug(e.target.value.replace(/[^a-z0-9-]/gi, '').toLowerCase())}
+                required
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="e.g. best-real-estate-agent-andheri-west"
               />
             </div>
 

@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { deleteBlogPost, getBlogPost } from '../../../../lib/firebase/blog';
+import { deleteBlogPost, getBlogPostBySlug } from '../../../../lib/firebase/blog';
 import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
@@ -16,20 +16,21 @@ type BlogPostType = {
   metaDescription?: string;
   metaKeywords?: string;
   isPublished: boolean;
-  createdAt?: string; // Ensure these are strings or convert them to strings
+  createdAt?: string; 
   updatedAt?: string;
+  slug: string;
 };
 
 const BlogPost = () => {
   const params = useParams();
   const router = useRouter();
-  const id = params?.id as string | undefined;
+  const slug = params?.slug as string | undefined;
   const [blogPost, setBlogPost] = useState<BlogPostType | null>(null);
 
   useEffect(() => {
-    if (id) {
+    if (slug) {
       const fetchBlogPost = async () => {
-        const { success, blogPost } = await getBlogPost(id);
+        const { success, blogPost } = await getBlogPostBySlug(slug);
         if (success) {
           // Convert Date objects to strings if they are not already
           if (blogPost.createdAt instanceof Date) {
@@ -43,7 +44,7 @@ const BlogPost = () => {
       };
       fetchBlogPost();
     }
-  }, [id]);
+  }, [slug]);
 
   if (!blogPost) {
     return (
@@ -53,9 +54,10 @@ const BlogPost = () => {
     );
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async () => {
+    if (!blogPost) return;
     if (window.confirm('Are you sure you want to delete this blog post?')) {
-      const { success } = await deleteBlogPost(id);
+      const { success } = await deleteBlogPost(blogPost.id);
       if (success) {
         alert('Blog post deleted successfully');
         router.push(`/dashboard/blog/`);
@@ -92,12 +94,12 @@ const BlogPost = () => {
           </div>
           <div className="flex space-x-2">
             <Link
-              href={`/dashboard/blog/edit/${blogPost.id}`}
-              className="px-4 py-2 bg-[#F28C26] text-white rounded hover:bg-[#f1b374] transition duration-300"
+              href={`/dashboard/blog/edit/${blogPost.slug}`}
+              className="px-3 py-3 bg-[#F28C26] text-white rounded h-12 w-[6rem] hover:bg-[#f1b374] transition duration-300"
             >
-              Edit Property
+              Edit Blog
             </Link>
-            <button onClick={() => handleDelete(blogPost.id)} className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-400 transition duration-300">
+            <button onClick={handleDelete} className="px-4 py-2 bg-red-500 text-white rounded h-12 hover:bg-red-400 transition duration-300">
               Delete
             </button>
           </div>

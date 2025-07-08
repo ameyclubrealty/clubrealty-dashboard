@@ -12,6 +12,7 @@ import DOMPurify from 'dompurify';
 
 interface BlogPost {
   id: string;
+  slug:string;
   title: string;
   content: string;
   images?: string[];
@@ -287,7 +288,7 @@ const BlogList = () => {
                   <div className="p-4 flex-grow flex flex-col">
                     {/* Title */}
                     <h2 className="text-lg font-semibold text-gray-800 cursor-pointer hover:underline border-b pb-1">
-                      <Link href={`/dashboard/blog/${post.id}`}>{post.title}</Link>
+                      <Link href={`/dashboard/blog/${post.slug}`}>{post.title}</Link>
                     </h2>
 
                     {/* Except */}
@@ -299,9 +300,9 @@ const BlogList = () => {
                       />.....
                     </div>
 
-                    {/* Read More Button */}
+                    {/* Read More Button */}  
                     <div className="flex justify-start mt-2">
-                      <Link href={`/dashboard/blog/${post.id}`}>
+                      <Link href={`/dashboard/blog/${post.slug}`}>
                         <button className="underline underline-offset-2 text-sm text-[#ef9337] hover:text-[#ba7632]">
                           Read More
                         </button>

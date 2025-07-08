@@ -248,9 +248,9 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
   ];
 
   return (
-    <div className="rich-text-editor">
-      {/* Toolbar */}
-      <div className="editor-toolbar">
+    <div className="rich-text-editor flex h-[600px]">
+      {/* Toolbar - sticky left */}
+      <div className="editor-toolbar sticky top-0 left-0 h-full flex flex-col items-center bg-white z-10 min-w-[56px] border-r overflow-y-auto">
         {toolbarButtons.map((button, index) => (
           <button
             key={index}
@@ -263,45 +263,46 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
               }
             }}
             title={button.title}
-            className="toolbar-button"
+            className="toolbar-button mb-2"
           >
             {button.label}
           </button>
         ))}
       </div>
 
-      {/* Editor */}
-      <div
-        ref={editorRef}
-        contentEditable={!readOnly}
-        onInput={handleInput}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        className={`editor-content ${isFocused ? 'focused' : ''}`}
-        data-placeholder={placeholder}
-        suppressContentEditableWarning
-      />
+      {/* Editor - scrollable right */}
+      <div className="flex-1 overflow-y-auto px-4">
+        <div
+          ref={editorRef}
+          contentEditable={!readOnly}
+          onInput={handleInput}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          className={`editor-content ${isFocused ? 'focused' : ''}`}
+          data-placeholder={placeholder}
+          suppressContentEditableWarning
+          style={{ minHeight: '500px', height: '100%' }}
+        />
+      </div>
 
       <style jsx>{`
         .rich-text-editor {
           border: 1px solid #e5e7eb;
           border-radius: 6px;
           overflow: hidden;
+          background: white;
         }
-        
-        h1{
-          font-size:6rem;
-        }
-
         .editor-toolbar {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 2px;
-          padding: 8px;
+          padding: 8px 0;
           background-color: #f9fafb;
-          border-bottom: 1px solid #e5e7eb;
+          border-right: 1px solid #e5e7eb;
+          min-width: 56px;
+          max-width: 80px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
         }
-        
         .toolbar-button {
           padding: 6px 10px;
           border: 1px solid #d1d5db;
@@ -311,14 +312,14 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
           font-size: 14px;
           font-weight: 500;
           transition: all 0.2s;
+          width: 40px;
+          margin-bottom: 4px;
         }
-        
         .toolbar-button:hover {
           background-color: #F28C26;
           color: white;
           border-color: #F28C26;
         }
-        
         .editor-content {
           min-height: 300px;
           padding: 16px;
@@ -327,47 +328,39 @@ const Editor = ({ value, onChange, readOnly = false, placeholder }: EditorProps)
           line-height: 1.6;
           background: white;
         }
-        
         .editor-content:empty:before {
           content: attr(data-placeholder);
           color: #9ca3af;
           font-style: italic;
         }
-        
         .editor-content.focused {
           border-color: #F28C26;
         }
-        
         .editor-content h1 {
           font-size: 2em;
           font-weight: bold;
           margin: 0.67em 0;
         }
-        
         .editor-content h2 {
           font-size: 1.5em;
           font-weight: bold;
           margin: 0.83em 0;
         }
-        
         .editor-content h3 {
           font-size: 1.17em;
           font-weight: bold;
           margin: 1em 0;
         }
-        
         .editor-content blockquote {
           border-left: 4px solid #F28C26;
           margin: 1em 0;
           padding-left: 1em;
           font-style: italic;
         }
-        
         .editor-content ul, .editor-content ol {
           margin: 1em 0;
           padding-left: 2em;
         }
-        
         .editor-content a {
           color: #F28C26;
           text-decoration: underline;

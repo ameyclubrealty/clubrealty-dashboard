@@ -10,13 +10,15 @@ import {
   query,
   serverTimestamp,
   Timestamp,
+  where,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+
 
 const COLLECTION = "blogPosts";
 
 // Helper function to convert Firestore timestamps to JavaScript Date objects
-const convertTimestamps = (data) => {
+const convertTimestamps = (data: any) => {
   const result = { ...data };
   for (const key in result) {
     if (result[key] instanceof Timestamp) {
@@ -27,7 +29,7 @@ const convertTimestamps = (data) => {
 };
 
 // Helper function to clean up data before saving to Firestore
-const cleanBlogData = (data) => {
+const cleanBlogData = (data: any) => {
   const cleanedData = JSON.parse(JSON.stringify(data));
   Object.keys(cleanedData).forEach((key) => {
     if (cleanedData[key] === undefined) {
@@ -51,13 +53,13 @@ export async function getBlogPosts() {
       };
     });
     return { success: true, blogPosts };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error getting blog posts from Firestore:", error);
     return { success: false, error: error.message || "Failed to fetch blog posts" };
   }
 }
 
-export async function getBlogPost(id) {
+export async function getBlogPost(id: string) {
   try {
     const blogPostRef = doc(db, COLLECTION, id);
     const blogPostDoc = await getDoc(blogPostRef);
@@ -71,13 +73,13 @@ export async function getBlogPost(id) {
       ...convertedData,
     };
     return { success: true, blogPost };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error getting blog post:", error);
     return { success: false, error: error?.message };
   }
 }
 
-export async function addBlogPost(blogData) {
+export async function addBlogPost(blogData: any) {
   try {
     const cleanedData = cleanBlogData(blogData);
     const blogWithTimestamp = {
@@ -87,7 +89,7 @@ export async function addBlogPost(blogData) {
     };
     const docRef = await addDoc(collection(db, COLLECTION), blogWithTimestamp);
     return { success: true, id: docRef.id };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in Firebase addBlogPost:", error);
     return {
       success: false,
@@ -96,7 +98,7 @@ export async function addBlogPost(blogData) {
   }
 }
 
-export async function updateBlogPost(id, blogData) {
+export async function updateBlogPost(id: string, blogData: any) {
   try {
     const cleanedData = cleanBlogData(blogData);
     const blogPostRef = doc(db, COLLECTION, id);
@@ -106,13 +108,13 @@ export async function updateBlogPost(id, blogData) {
     };
     await updateDoc(blogPostRef, blogWithTimestamp);
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating blog post:", error);
     return { success: false, error: error.message };
   }
 }
 
-export async function deleteBlogPost(id) {
+export async function deleteBlogPost(id: string) {
   try {
     if (!id) {
       console.error("Invalid blog post ID provided for deletion");
@@ -121,7 +123,7 @@ export async function deleteBlogPost(id) {
     const blogPostRef = doc(db, COLLECTION, id);
     await deleteDoc(blogPostRef);
     return { success: true, id };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in deleteBlogPost:", error);
     return {
       success: false,
@@ -130,7 +132,7 @@ export async function deleteBlogPost(id) {
   }
 }
 
-export async function uploadBlogImage(file, blogId) {
+export async function uploadBlogImage(file: File, blogId: string) {
   try {
     // If blogId is not provided, use a temporary folder
     const folderPath = blogId ? `blogPosts/${blogId}` : 'blogPosts/temp';
@@ -149,7 +151,7 @@ export async function uploadBlogImage(file, blogId) {
       url: downloadURL,
       path: `${folderPath}/${uniqueFileName}` // Return the path for potential cleanup
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in uploadBlogImage:", error);
     
     // Provide more specific error messages
@@ -171,13 +173,59 @@ export async function uploadBlogImage(file, blogId) {
   }
 }
 
-export async function deleteBlogImage(imagePath) {
+export async function deleteBlogImage(imagePath: string) {
   try {
     const storageRef = ref(storage, imagePath);
     await deleteObject(storageRef);
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting image:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Fetch a blog post by its slug
+export async function getBlogPostBySlug(slug: string) {
+  try {
+    const blogPostsRef = collection(db, COLLECTION);
+    const q = query(blogPostsRef, where("slug", "==", slug));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      throw new Error("Blog post not found");
+    }
+    const docSnap = querySnapshot.docs[0];
+    const data = docSnap.data();
+    const convertedData = convertTimestamps(data);
+    const blogPost = {
+      id: docSnap.id,
+      ...convertedData,
+    };
+    return { success: true, blogPost };
+  } catch (error: any) {
+    console.error("Error getting blog post by slug:", error);
+    return { success: false, error: error?.message };
+  }
+}
+
+// Update a blog post by its slug (finds the doc, then updates by ID)
+export async function updateBlogPostBySlug(slug: string, blogData: any) {
+  try {
+    const blogPostsRef = collection(db, COLLECTION);
+    const q = query(blogPostsRef, where("slug", "==", slug));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      throw new Error("Blog post not found for slug: " + slug);
+    }
+    const docRef = querySnapshot.docs[0].ref;
+    const cleanedData = cleanBlogData(blogData);
+    const blogWithTimestamp = {
+      ...cleanedData,
+      updatedAt: serverTimestamp(),
+    };
+    await updateDoc(docRef, blogWithTimestamp);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating blog post by slug:", error);
     return { success: false, error: error.message };
   }
 }

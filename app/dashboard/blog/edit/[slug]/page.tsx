@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Editor from '../../editor';
-import { getBlogPost, updateBlogPost, uploadBlogImage } from '../../../../../lib/firebase/blog';
+import { getBlogPostBySlug, updateBlogPostBySlug, uploadBlogImage } from '../../../../../lib/firebase/blog';
 
 const EditBlogPost = () => {
   const router = useRouter();
   const params = useParams();
-  const id = params?.id as string;
+  const slug = params?.slug as string;
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -22,6 +22,7 @@ const EditBlogPost = () => {
   const [category, setCategory] = useState('');
   const [customCategory, setCustomCategory] = useState('');
   const [useCustomCategory, setUseCustomCategory] = useState(false);
+  const [formSlug, setFormSlug] = useState('');
 
   const predefinedCategories = [
     "Buying Guides",
@@ -31,9 +32,9 @@ const EditBlogPost = () => {
   ];
 
   useEffect(() => {
-    if (id) {
+    if (slug) {
       const fetchBlogPost = async () => {
-        const { success, blogPost } = await getBlogPost(id);
+        const { success, blogPost } = await getBlogPostBySlug(slug);
         if (success) {
           setTitle(blogPost.title);
           setContent(blogPost.content);
@@ -43,11 +44,12 @@ const EditBlogPost = () => {
           setExistingImages(blogPost.images || []);
           setIsPublished(blogPost.isPublished || false);
           setCategory(blogPost.category || '');
+          setFormSlug(blogPost.slug || '');
         }
       };
       fetchBlogPost();
     }
-  }, [id]);
+  }, [slug]);
 
   useEffect(() => {
     const previews = newImages.map((file) => URL.createObjectURL(file));
@@ -82,7 +84,7 @@ const EditBlogPost = () => {
       if (newImages.length > 0) {
         const uploadedImageUrls = await Promise.all(
           newImages.map(async (image) => {
-            const { success, url } = await uploadBlogImage(image, id);
+            const { success, url } = await uploadBlogImage(image, slug);
             return success ? url : null;
           })
         );
@@ -92,7 +94,7 @@ const EditBlogPost = () => {
 
       const selectedCategory = useCustomCategory ? customCategory : category;
 
-      const { success } = await updateBlogPost(id, {
+      const { success } = await updateBlogPostBySlug(slug, {
         title,
         content,
         images: updatedImageUrls,
@@ -101,11 +103,12 @@ const EditBlogPost = () => {
         metaKeywords,
         isPublished,
         category: selectedCategory,
+        slug: formSlug,
       });
 
       if (success) {
         alert('Blog post updated successfully');
-        router.push(`/dashboard/blog/${id}`);
+        router.push(`/dashboard/blog/${formSlug}`);
       } else {
         alert('Failed to update the blog post');
       }
@@ -223,9 +226,25 @@ const EditBlogPost = () => {
               />
             </div>
 
+            {/* Slug Input */}
+            <div>
+              <label htmlFor="slug" className="block text-sm font-medium text-gray-700">
+                URL Slug
+              </label>
+              <input
+                id="slug"
+                type="text"
+                value={formSlug}
+                onChange={e => setFormSlug(e.target.value.replace(/[^a-z0-9-]/gi, '').toLowerCase())}
+                required
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="e.g. best-real-estate-agent-andheri-west"
+              />
+            </div>
+
             {/* Content */}
             <div className="md:col-span-2">
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2 ">
                 Blog Content
               </label>
               <Editor
